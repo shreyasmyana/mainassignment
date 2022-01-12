@@ -1,0 +1,20 @@
+http:
+  port: "8081"
+
+aws:
+  filenamesfdc: "Account Data.csv"
+  filenameoracledb: "Inventory Data.csv"
+  accesskey: "AKIASYZ4X6XTZ7YWFEUQ"
+  secretkey: "vq+mUUNTJMDYYtXEGYOuHi6oiUKx874az07xKxHw"
+
+sfdc:
+  username: "shreyas.a.myana@apisero.com"
+  password: "your-password"
+  token: "uJdRFWI26FtdpjnXhzlgtMhi"
+  
+oracle:
+  host: "localhost"
+  port: "1521"
+  user: "dummy"
+  password: "dummy"
+  servicename: "ORCLCDB.localdomain"

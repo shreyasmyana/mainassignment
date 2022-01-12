@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	
+<s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="7e4d55c2-98e5-4172-a111-03994b404378" >
+		<s3:basic-connection accessKey="${aws.accesskey}" secretKey="${aws.secretkey}" region="AP_SOUTH_1" />
+	</s3:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b471bf16-7547-44e1-973d-adf12494b4ba" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="c4724100-0991-4cb4-9a24-fd268c4e870d" >
+		<salesforce:basic-connection username="${sfdc.username}" password="SAMisGeek@12" securityToken="${sfdc.token}" />
+	</salesforce:sfdc-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="15ff3ecd-2805-42a9-bd33-915c1d9a41ee" file="config.yaml" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="332c3c8b-48ee-4521-976f-358c758f6aa0" >
+		<db:oracle-connection host="${oracle.host}" user="${oracle.user}" password="${oracle.password}" serviceName="${oracle.servicename}" port="${oracle.port}"/>
+	</db:config>
+	<configuration doc:name="Configuration" doc:id="5a16638e-94a0-4126-aec7-17eb877c9e5d" defaultErrorHandler-ref="globalError_Handler" />
+	<error-handler name="globalError_Handler" doc:id="5cded1c1-5003-4c79-8b5b-d8cec5be13b7" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="5e8b83a6-9e1a-4e64-9329-b8c06b530800" type="ANY">
+			<ee:transform doc:name="Transform Message" doc:id="0ee93626-ade7-45d3-9db9-e19f21146a23" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":error.description
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+	
+	
+</mule>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="mainassignment-suite.xml" />
+	<munit:test name="Amazon-S3_To_Salesforce-test" doc:id="f85525b6-d60f-4e26-bf3f-90a07c287fe9" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Retrieve" doc:id="7227cea3-b5a8-4634-822b-256233c47ada" processor="os:retrieve">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="44e662c6-ef5d-45a4-8315-65b6a17ac7c6" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[readUrl('classpath://AmazonS3ToSalesforcetest\mock_payload.dwl')]" />
+					<munit-tools:variables >
+						<munit-tools:variable key="filename" value="#[readUrl('classpath://AmazonS3ToSalesforcetest\mock_variable_.dwl')]" encoding="UTF-8" />
+						<munit-tools:variable key="lastAccountID" value="#[readUrl('classpath://AmazonS3ToSalesforcetest\mock_variable_1.dwl')]" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Get object" doc:id="c6203602-cd11-45a9-84c1-2f89c361f571" processor="s3:get-object">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="9c9113af-a8a0-4017-84ee-57b630609ec7" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output text/csv --- readUrl('classpath://AmazonS3ToSalesforcetest\mock_payload1.dwl')]" mediaType="text/csv" encoding="UTF-8" />
+					<munit-tools:attributes value="#[readUrl('classpath://AmazonS3ToSalesforcetest\mock_attributes.dwl')]" />
+					<munit-tools:variables >
+						<munit-tools:variable key="filename" value="#[readUrl('classpath://AmazonS3ToSalesforcetest\mock_variable_2.dwl')]" encoding="UTF-8" />
+						<munit-tools:variable key="lastAccountID" value="#[readUrl('classpath://AmazonS3ToSalesforcetest\mock_variable_3.dwl')]" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Store" doc:id="00ec7d48-9bcb-4358-8222-b1461698e737" processor="os:store">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="732dc358-0164-402a-a658-36a400e2ca01" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/java --- readUrl('classpath://AmazonS3ToSalesforcetest\mock_payload2.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					<munit-tools:attributes value="#[readUrl('classpath://AmazonS3ToSalesforcetest\mock_attributes1.dwl')]" />
+					<munit-tools:variables >
+						<munit-tools:variable key="filename" value="#[readUrl('classpath://AmazonS3ToSalesforcetest\mock_variable_4.dwl')]" encoding="UTF-8" />
+						<munit-tools:variable key="lastAccountID" value="#[readUrl('classpath://AmazonS3ToSalesforcetest\mock_variable_5.dwl')]" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit:set-event doc:name="Set Input" doc:id="a675637a-de21-44b4-9678-b1146584b0a6" >
+				<munit:payload value="#[readUrl('classpath://AmazonS3ToSalesforcetest\set-event_payload.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to Amazon-S3_To_Salesforce" doc:id="dde274a9-6caf-4321-bd40-804f8b0d8122" name="Amazon-S3_To_Salesforce"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="d3e7b369-e8ef-49f0-8e03-0a2b8ddbbe7b" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import AmazonS3ToSalesforcetest::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+			<munit-tools:verify-call doc:name="Verify Set Variable" doc:id="4c094a74-c79e-421a-9097-6e5ba37e2ebd" processor="set-variable" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="b037d930-e1b1-4add-aa43-80629e72087f" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+			<munit-tools:verify-call doc:name="Verify Transform Message" doc:id="2272ad13-257f-48a6-a2e2-ca6276a10bf2" processor="ee:transform" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="3b28c347-775f-49d1-8eff-7056f98c739c" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+			<munit-tools:verify-call doc:name="Verify CSV TO JAVA" doc:id="ba2085ed-02bf-40c0-baa6-4982f6b60d43" processor="ee:transform" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="3cefc127-c442-451b-97dd-bbb4c9cc92bc" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="mainassignmentFlow-test" doc:id="1ecfb16e-074b-438f-96d5-0c6529f66609" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Get object" doc:id="29091544-42f1-4019-bf1c-0e48c0422f8e" processor="s3:get-object">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="41adf6d5-3b1e-4216-9c90-b50e13d6952a" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output text/csv --- readUrl('classpath://mainassignmentFlowtest\mock_payload.dwl')]" mediaType="text/csv" encoding="UTF-8" />
+					<munit-tools:attributes value="#[readUrl('classpath://mainassignmentFlowtest\mock_attributes.dwl')]" />
+					<munit-tools:variables >
+						<munit-tools:variable key="filename" value="#[readUrl('classpath://mainassignmentFlowtest\mock_variable_.dwl')]" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Bulk insert" doc:id="4e2e2612-8a42-43e3-89b6-ab4e629b6697" processor="db:bulk-insert">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="526c8ae1-0705-415b-882c-e5948f6dd6fc" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/java --- readUrl('classpath://mainassignmentFlowtest\mock_payload1.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					<munit-tools:variables >
+						<munit-tools:variable key="filename" value="#[readUrl('classpath://mainassignmentFlowtest\mock_variable_1.dwl')]" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit:set-event doc:name="Set Input" doc:id="e538e82c-8cac-4d54-97b7-8473eb8fcb9f" >
+				<munit:payload value="#[readUrl('classpath://mainassignmentFlowtest\set-event_payload.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to mainassignmentFlow" doc:id="58176710-a35e-41ce-b0f8-b874873b08d1" name="mainassignmentFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="b046dcae-01ed-4547-9f78-0c5dfe628fac" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import mainassignmentFlowtest::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+			<munit-tools:verify-call doc:name="Verify Set Variable" doc:id="30b08e35-2ff9-4989-b912-eaaa4464cac0" processor="set-variable" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="8467f1e9-ca7a-41ff-bfeb-78bb727d996a" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+			<munit-tools:verify-call doc:name="Verify Transform Message" doc:id="bd196461-f518-4551-85b8-08191da846ce" processor="ee:transform" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="c76ac73c-8fcf-44fc-b073-69af3bf83fe3" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

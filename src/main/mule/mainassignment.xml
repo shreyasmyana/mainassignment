@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	
+	<flow name="Amazon-S3_To_Salesforce" doc:id="a22e7ad1-0cbc-40c6-a853-6efcf537bb7f" >
+		<scheduler doc:name="Scheduler" doc:id="9426283c-3283-45e5-8661-1e34ff99acf7" >
+			<scheduling-strategy >
+				<cron expression="0 0 3 ? * *" timeZone="Asia/Calcutta" />
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Logger" doc:id="6d675887-7ca9-4dad-8e75-ef5181b34eb9" />
+		<set-variable value="${aws.filenamesfdc}" doc:name="Set Variable" doc:id="b037d930-e1b1-4add-aa43-80629e72087f" variableName="filename"/>
+		<os:retrieve doc:name="Retrieve" doc:id="44e662c6-ef5d-45a4-8315-65b6a17ac7c6" key="lastAccountID" target="lastAccountID">
+			<os:default-value><![CDATA[0]]></os:default-value>
+		</os:retrieve>
+		<s3:get-object doc:name="Get object" doc:id="9c9113af-a8a0-4017-84ee-57b630609ec7" config-ref="Amazon_S3_Configuration" bucketName="ecom-g13" key="#[vars.filename]" />
+		<ee:transform doc:name="CSV TO JAVA" doc:id="3cefc127-c442-451b-97dd-bbb4c9cc92bc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	AccountNumber: payload01.acc_id,
+	Name: payload01.cust_name,
+	Phone: payload01.cust_contact
+}
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<os:store doc:name="Store" doc:id="732dc358-0164-402a-a658-36a400e2ca01" key="lastAccountID">
+			<os:value><![CDATA[#[max(payload.*AccountNumber)]]]></os:value>
+		</os:store>
+		<batch:job jobName="mainassignmentBatch_Job" doc:id="6c396e51-680b-479e-a0be-870c5f0ecb01" >
+			<batch:process-records >
+				<batch:step name="WriteToSalesforce" doc:id="c0d12484-b23d-483d-8391-cc82a4bb5d44" acceptExpression="#[payload.AccountNumber &gt; vars.lastAccountID]">
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="0b705768-03dc-4c89-a875-151ff4979e74" size="3">
+						<salesforce:create type="Account" doc:name="Create" doc:id="731403d2-7d7c-475d-a3f8-bd0002ff1e7c" config-ref="Salesforce_Config" />
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="4430afab-48a0-48a0-90fb-3b1716baa997" />
+			</batch:on-complete>
+		</batch:job>
+		<ee:transform doc:name="Transform Message" doc:id="3b28c347-775f-49d1-8eff-7056f98c739c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="8ed514f4-e489-482a-9aaa-f3a560a286bc" />
+	</flow>
+	<flow name="mainassignmentFlow" doc:id="8a022562-2b0a-4719-8585-762a6b357835" >
+		<scheduler doc:name="Scheduler" doc:id="2805a254-a8c3-4be9-8de3-e3ddcee9e6fe" >
+			<scheduling-strategy >
+				<cron expression="0 0 3 ? * *" timeZone="Asia/Calcutta"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Logger" doc:id="7956fa7c-051e-41d9-8fca-09957bf19f87" />
+		<set-variable value="${aws.filenameoracledb}" doc:name="Set Variable" doc:id="8467f1e9-ca7a-41ff-bfeb-78bb727d996a" variableName="filename"/>
+		<s3:get-object doc:name="Get object" doc:id="41adf6d5-3b1e-4216-9c90-b50e13d6952a" config-ref="Amazon_S3_Configuration" bucketName="ecom-g13" key="#[vars.filename]"/>
+		<ee:transform doc:name="Transform Message" doc:id="c76ac73c-8fcf-44fc-b073-69af3bf83fe3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	id: payload01.product_id,
+	name: payload01.product_name,
+	pdesc: payload01.product_description,
+	pprice: payload01.product_price
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:bulk-insert doc:name="Bulk insert" doc:id="526c8ae1-0705-415b-882c-e5948f6dd6fc" config-ref="Database_Config">
+			<db:sql ><![CDATA[INSERT INTO inventory(product_id,product_name,product_description,product_price) VALUES (:id, :name, :pdesc, :pprice)]]></db:sql>
+		</db:bulk-insert>
+		<logger level="INFO" doc:name="Logger" doc:id="51c61c72-9c11-40a4-80bc-d7ed0a2fea76" message="#[payload]" />
+	</flow>
+</mule>

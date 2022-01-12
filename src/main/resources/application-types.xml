@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="accounts" format="csv">
+      <types:shape format="weave" example="examples/Account Data.csv"><![CDATA[%dw 2.0
+
+type accounts = Array<{|  acc_id: String,   cust_name: String,   cust_addr: String,   cust_email: String,   cust_contact: String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+    <types:type name="inventory" format="csv">
+      <types:shape format="weave" example="examples/Inventory Data.csv"><![CDATA[%dw 2.0
+
+type inventory = Array<{|  product_id: String,   product_name: String,   product_description: String,   product_price: String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#3cefc127-c442-451b-97dd-bbb4c9cc92bc">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="accounts"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#c76ac73c-8fcf-44fc-b073-69af3bf83fe3">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="inventory"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>
